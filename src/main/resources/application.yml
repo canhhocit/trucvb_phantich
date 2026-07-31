@@ -46,6 +46,26 @@ outbox:
   publisher:
     fixed-delay-ms: ${OUTBOX_PUBLISHER_FIXED_DELAY_MS:5000}
 
+security:
+  hmac:
+    enabled: true
+    header:
+      api-key: X-Api-Key
+      timestamp: X-Timestamp
+      nonce: X-Nonce
+      signature: X-Signature
+    algorithm: HmacSHA256
+    clock-skew: 300s
+    nonce-ttl: 300s
+    cache-ttl: 30m
+    negative-cache-ttl: 60s
+    max-body-size: 262144
+    protected-paths:
+      - /ack
+      - /*/transactions/sended/**
+      - /*/transactions/received
+    master-key: ${HMAC_MASTER_KEY:dev-local-master-key-change-in-production}
+
 app:
   client-simulator:
     gateway-url: ${CLIENT_SIMULATOR_GATEWAY_URL:http://localhost:8080/api/v1/exchange}

@@ -2,6 +2,9 @@ package com.TrucVanban.shared.config;
 
 import com.TrucVanban.exchange.service.AuditLogService;
 import com.TrucVanban.registry.service.RegistryService;
+import com.TrucVanban.shared.security.hmac.HmacAuthenticationFilter;
+import com.TrucVanban.shared.security.hmac.HmacAuthenticationService;
+import com.TrucVanban.shared.security.hmac.HmacProperties;
 import com.TrucVanban.shared.utils.CanonicalStringBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +36,18 @@ public class SecurityConfig {
 
         return new SignatureVerificationFilter(registryService, auditLogService, objectMapper, canonicalStringBuilder);
     }
+
+    @Bean
+    public HmacAuthenticationFilter hmacAuthenticationFilter(
+            HmacAuthenticationService hmacAuthenticationService,
+            HmacProperties hmacProperties) {
+        return new HmacAuthenticationFilter(hmacAuthenticationService, hmacProperties);
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   SignatureVerificationFilter signatureVerificationFilter) throws Exception {
+                                                   SignatureVerificationFilter signatureVerificationFilter,
+                                                   HmacAuthenticationFilter hmacAuthenticationFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -48,7 +60,8 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterAfter(signatureVerificationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterAfter(signatureVerificationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(hmacAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

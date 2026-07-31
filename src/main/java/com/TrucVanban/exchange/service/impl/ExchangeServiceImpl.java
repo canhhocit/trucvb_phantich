@@ -207,7 +207,7 @@ public class ExchangeServiceImpl implements ExchangeService {
                                     .status(sh.getStatusCode().getCode())
                                     .build())
                             .toList());
-                    timelines.addFirst(TransactionReceivedStatusResponse.timeline.builder()
+                    timelines.add(0, TransactionReceivedStatusResponse.timeline.builder()
                             .time(t.getCreatedAt())
                             .status(t.getCurrentStatus().name())
                             .build());

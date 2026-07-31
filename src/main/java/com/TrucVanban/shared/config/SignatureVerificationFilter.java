@@ -72,7 +72,7 @@ public class SignatureVerificationFilter extends OncePerRequestFilter {
         try {
             body = objectMapper.readTree(bodyStr);
         } catch (Exception e) {
-            log.warn("[SignatureFilter] JSON body không hợp lệ: {}", e.getMessage());
+            log.warn("[SignatureFilter] JSON body không hợp lệ: {} | body='{}'", e.getMessage(), bodyStr.substring(0, Math.min(200, bodyStr.length())));
             writeErrorResponse(response, HttpStatus.BAD_REQUEST,
                     "Dữ liệu đầu vào không hợp lệ. Vui lòng kiểm tra định dạng JSON.");
             return;

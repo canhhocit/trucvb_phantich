@@ -1,5 +1,6 @@
 package com.TrucVanban.registry.controller;
 
+import com.TrucVanban.registry.dto.response.ApikeyCheckResponse;
 import com.TrucVanban.registry.dto.response.CreateApiKeyResponse;
 import com.TrucVanban.registry.service.ApiKeyManagementService;
 import com.TrucVanban.shared.ResponseData;
@@ -62,6 +63,17 @@ public class ApiKeyController {
                 .data(null)
                 .build();
 
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api-keys/{keyId}")
+    public ResponseEntity<ResponseData<ApikeyCheckResponse>> getApiKeyStatus(@PathVariable String keyId) {
+        ApikeyCheckResponse data = apiKeyManagementService.checkApikeyStatus(keyId);
+        ResponseData<ApikeyCheckResponse> response = ResponseData.<ApikeyCheckResponse>builder()
+                .success(true)
+                .message("check API key")
+                .data(data)
+                .build();
         return ResponseEntity.ok(response);
     }
 }

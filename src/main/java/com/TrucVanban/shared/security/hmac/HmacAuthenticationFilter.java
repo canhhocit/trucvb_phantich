@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -44,7 +43,7 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         HttpServletRequest requestToUse = request;
         if (HttpMethod.POST.matches(request.getMethod()) && PATH_MATCHER.match("/ack", request.getServletPath())) {
-            requestToUse = new ContentCachingRequestWrapper(request);
+            requestToUse = new CachedBodyRequestWrapper(request);
         }
 
         try {

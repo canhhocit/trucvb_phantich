@@ -36,9 +36,6 @@ public class ApiKeyWarmupRunner implements ApplicationRunner {
             return;
         }
 
-        int page = 0;
-        int pageSize = 100;
-
         log.info("[ApiKeyWarmupRunner] Loading active API keys into Redis");
 
         while (true) {

@@ -1,5 +1,6 @@
 package com.TrucVanban.registry.service.impl;
 
+import com.TrucVanban.registry.dto.response.ApikeyCheckResponse;
 import com.TrucVanban.registry.dto.response.CreateApiKeyResponse;
 import com.TrucVanban.registry.entity.ApiKey;
 import com.TrucVanban.registry.entity.Organization;
@@ -44,7 +45,8 @@ public class ApiKeyManagementServiceImpl implements ApiKeyManagementService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tổ chức với mã: " + agencyCode));
 
         if (organization.getStatus() != OrganizationStatus.ACTIVE) {
-            throw new BusinessLogicException("Tổ chức '" + agencyCode + "' không ở trạng thái ACTIVE, không thể cấp API key");
+            throw new BusinessLogicException(
+                    "Tổ chức '" + agencyCode + "' không ở trạng thái ACTIVE, không thể cấp API key");
         }
 
         String keyId = generateKeyId();
@@ -117,5 +119,19 @@ public class ApiKeyManagementServiceImpl implements ApiKeyManagementService {
             // Lần request tiếp theo sẽ đọc lại DB và nhận null.
             log.warn("[ApiKeyManagementService] Không thể xoá cache Redis cho keyId={}: {}", keyId, e.getMessage());
         }
+    }
+
+    // check
+    @Override
+    public ApikeyCheckResponse checkApikeyStatus(String keyId) {
+        ApiKey apiKey = apiKeyRepository.findByKeyId(keyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy API key với keyId: " + keyId));
+
+        return ApikeyCheckResponse.builder()
+                .keyId(apiKey.getKeyId())
+                .status(apiKey.getStatus().name())
+                .expiresAt(apiKey.getExpiresAt())
+                .createdAt(apiKey.getCreatedAt())
+                .build();
     }
 }

@@ -96,6 +96,10 @@ public class HmacAuthenticationService {
 
     private byte[] readRequestBody(HttpServletRequest request) {
         try {
+            // Nếu đã wrap bởi CachedBodyRequestWrapper, lấy body từ cache (tránh đọc stream 2 lần)
+            if (request instanceof CachedBodyRequestWrapper cached) {
+                return cached.getCachedBody();
+            }
             long contentLength = request.getContentLengthLong();
             if (contentLength > 0 && contentLength > hmacProperties.getMaxBodySize()) {
                 throw new IllegalStateException("Request body exceeds configured max size");

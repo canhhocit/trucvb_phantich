@@ -40,8 +40,9 @@ public class SecurityConfig {
     @Bean
     public HmacAuthenticationFilter hmacAuthenticationFilter(
             HmacAuthenticationService hmacAuthenticationService,
-            HmacProperties hmacProperties) {
-        return new HmacAuthenticationFilter(hmacAuthenticationService, hmacProperties);
+            HmacProperties hmacProperties,
+            AuditLogService auditLogService) {
+        return new HmacAuthenticationFilter(hmacAuthenticationService, hmacProperties, auditLogService);
     }
 
     @Bean

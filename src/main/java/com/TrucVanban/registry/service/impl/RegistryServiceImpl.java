@@ -38,6 +38,7 @@ public class RegistryServiceImpl implements RegistryService {
     private final SlaConfigurationRepository slaConfigurationRepository;
     private final OrganizationMapper organizationMapper;
     private final SlaConfigMapper slaConfigMapper;
+    private final com.TrucVanban.shared.security.hmac.ApiKeyCacheService apiKeyCacheService;
 
     @Override
     @Transactional
@@ -71,6 +72,9 @@ public class RegistryServiceImpl implements RegistryService {
         organization.setStatus(OrganizationStatus.SUSPENDED);
         organizationRepository.save(organization);
 
+        // Evict API key cache khi organization bị suspend
+        apiKeyCacheService.evictAgencyCache(organization.getId());
+
         log.info("Khóa tổ chức thành công: code={}, reason={}", code, request.getReason());
 
         return organizationMapper.toSuspendResponse(organization);
@@ -93,6 +97,10 @@ public class RegistryServiceImpl implements RegistryService {
         } else {
             organization.setStatus(OrganizationStatus.REJECTED);
             organization.setRejectReason(request.getRejectReason());
+            
+            // Evict cache khi reject
+            apiKeyCacheService.evictAgencyCache(organization.getId());
+            
             log.info("Từ chối tổ chức: code={}, reason={}", code, request.getRejectReason());
         }
 

@@ -22,6 +22,7 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
     private final HmacAuthenticationService hmacAuthenticationService;
     private final HmacProperties hmacProperties;
+    private final com.TrucVanban.exchange.service.AuditLogService auditLogService;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -50,7 +51,22 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
             hmacAuthenticationService.authenticate(requestToUse);
             filterChain.doFilter(requestToUse, response);
         } catch (HmacAuthenticationException exception) {
-            log.warn("[HmacAuthenticationFilter] Authentication failed for path={} reason={}", request.getServletPath(), exception.getMessage());
+            String apiKey = request.getHeader(hmacProperties.getHeader().getApiKey());
+            String path = request.getServletPath();
+            
+            log.warn("[HmacAuthenticationFilter] Authentication failed for path={} reason={}", path, exception.getMessage());
+            
+            // Ghi audit log cho authentication failure
+            auditLogService.log(
+                    "HMAC_AUTH_FAILED",
+                    "API_KEY",
+                    apiKey != null ? apiKey : "UNKNOWN",
+                    "FAILURE",
+                    String.format("Path: %s, Reason: %s", path, exception.getClass().getSimpleName()),
+                    null,
+                    null
+            );
+            
             writeErrorResponse(response, determineStatus(exception), buildErrorMessage(exception));
         }
     }
@@ -66,10 +82,26 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String buildErrorMessage(HmacAuthenticationException exception) {
-        if (exception instanceof HmacAuthenticationException.TimestampSkewException) {
-            return "Xác thực thất bại do timestamp lệch quá giới hạn. Vui lòng đồng bộ đồng hồ và thử lại.";
-        }
-        return "Xác thực thất bại. Vui lòng kiểm tra API Key và chữ ký.";
+        return switch (exception) {
+            case HmacAuthenticationException.MissingAuthHeaderException _ ->
+                    "Thiếu header xác thực. Yêu cầu: X-Api-Key, X-Timestamp, X-Nonce, X-Signature";
+            case HmacAuthenticationException.TimestampSkewException _ ->
+                    "Timestamp lệch quá giới hạn cho phép. Vui lòng đồng bộ đồng hồ hệ thống";
+            case HmacAuthenticationException.ApiKeyInvalidException _ ->
+                    "API Key không hợp lệ hoặc đã bị thu hồi";
+            case HmacAuthenticationException.ApiKeyExpiredException _ ->
+                    "API Key đã hết hạn. Vui lòng tạo key mới";
+            case HmacAuthenticationException.AgencyInactiveException _ ->
+                    "Tổ chức đã bị tạm ngưng hoặc không còn hoạt động";
+            case HmacAuthenticationException.SignatureInvalidException _ ->
+                    "Chữ ký không hợp lệ. Vui lòng kiểm tra secret key và canonical string";
+            case HmacAuthenticationException.ReplayDetectedException _ ->
+                    "Phát hiện replay attack. Nonce đã được sử dụng";
+            case HmacAuthenticationException.AuthStoreUnavailableException _ ->
+                    "Hệ thống xác thực tạm thời không khả dụng. Vui lòng thử lại";
+            default ->
+                    "Xác thực thất bại. Vui lòng kiểm tra thông tin xác thực";
+        };
     }
 
     private void writeErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {

@@ -117,4 +117,31 @@ public class ApiKeyCacheService {
                         )))
                 .orElse(null);
     }
+
+    /**
+     * Evict tất cả API key cache của một agency.
+     * Được gọi khi agency thay đổi trạng thái (suspend, activate, etc).
+     */
+    public void evictAgencyCache(Long agencyId) {
+        try {
+            String agencyKeySetKey = AGENCY_KEY_SET_PREFIX + agencyId;
+            var keyIds = redisTemplate.opsForSet().members(agencyKeySetKey);
+            
+            if (keyIds == null || keyIds.isEmpty()) {
+                log.debug("[ApiKeyCacheService] No cached keys found for agency {}", agencyId);
+                return;
+            }
+
+            for (String keyId : keyIds) {
+                redisTemplate.delete(API_KEY_CACHE_PREFIX + keyId);
+                redisTemplate.delete(API_KEY_MISS_PREFIX + keyId);
+            }
+            
+            redisTemplate.delete(agencyKeySetKey);
+            
+            log.info("[ApiKeyCacheService] Evicted {} API key cache entries for agency {}", keyIds.size(), agencyId);
+        } catch (DataAccessException e) {
+            log.warn("[ApiKeyCacheService] Failed to evict cache for agency {}: {}", agencyId, e.getMessage());
+        }
+    }
 }

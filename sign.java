@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter;
  */
 public class sign {
     public static void main(String[] args) throws Exception {
-
+//feat(auth): implement API Key + HMAC-SHA256 authentication for inter-system APIs
         // ═══════════════════════════════════════
         // THAY 3 GIÁ TRỊ NÀY TRƯỚC KHI CHẠY
         String documentCode    = "VB-2020";

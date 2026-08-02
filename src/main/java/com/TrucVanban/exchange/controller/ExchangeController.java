@@ -8,11 +8,10 @@ import com.TrucVanban.exchange.dto.response.TransactionReceivedStatusResponse;
 import com.TrucVanban.exchange.dto.response.TransactionSendStatusResponse;
 import com.TrucVanban.exchange.service.ExchangeService;
 import com.TrucVanban.shared.ResponseData;
+import com.TrucVanban.shared.security.hmac.RequireAgencyMatch;
 import com.TrucVanban.shared.utils.ListUtils;
 import jakarta.validation.Valid;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,6 +52,7 @@ public class ExchangeController {
     }
 
     @GetMapping(value = "{senderCode}/transactions/sended/{transactionCode}")
+    @RequireAgencyMatch(pathVariable = "senderCode")
     public ResponseEntity<ResponseData<TransactionSendStatusResponse>> getTransactionSendStatus(
             @PathVariable String senderCode,
             @PathVariable String transactionCode) {
@@ -66,6 +66,7 @@ public class ExchangeController {
     }
 
     @GetMapping(value = "{receiverCode}/transactions/received")
+    @RequireAgencyMatch(pathVariable = "receiverCode")
     public ResponseEntity<ResponseData<?>> getTransactionReceivedStatus(@PathVariable String receiverCode) {
         List<TransactionReceivedStatusResponse> data = exchangeService.getTransactionReceivedStatus(receiverCode);
 

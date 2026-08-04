@@ -4,6 +4,8 @@ import com.TrucVanban.registry.dto.response.ApikeyCheckResponse;
 import com.TrucVanban.registry.dto.response.CreateApiKeyResponse;
 import com.TrucVanban.registry.service.ApiKeyManagementService;
 import com.TrucVanban.shared.ResponseData;
+
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -19,18 +21,8 @@ public class ApiKeyController {
 
     private final ApiKeyManagementService apiKeyManagementService;
 
-    /**
-     * Tạo API key mới cho một agency.
-     *
-     * POST /api/v1/registry/agencies/{agencyCode}/api-keys
-     *
-     * Body param (query param tuỳ chọn):
-     *   expiresAt — ISO-8601, ví dụ: 2027-01-01T00:00:00Z
-     *               Nếu không truyền thì key không hết hạn.
-     *
-     * Response trả về secret plaintext DUY NHẤT lần này — lưu lại ngay.
-     */
     @PostMapping("/{agencyCode}/api-keys")
+    @Operation(summary = "tạo apikey ")
     public ResponseEntity<ResponseData<CreateApiKeyResponse>> createApiKey(
             @PathVariable String agencyCode,
             @RequestParam(required = false)
@@ -47,12 +39,8 @@ public class ApiKeyController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Thu hồi một API key.
-     *
-     * DELETE /api/v1/registry/agencies/api-keys/{keyId}
-     */
     @DeleteMapping("/api-keys/{keyId}")
+    @Operation(summary = "thu hồi apikey")
     public ResponseEntity<ResponseData<Void>> revokeApiKey(@PathVariable String keyId) {
 
         apiKeyManagementService.revokeApiKey(keyId);
@@ -67,6 +55,7 @@ public class ApiKeyController {
     }
 
     @GetMapping("/api-keys/{keyId}")
+    @Operation(summary = "check API key [đang để test, có thể xóa endpoint này]")
     public ResponseEntity<ResponseData<ApikeyCheckResponse>> getApiKeyStatus(@PathVariable String keyId) {
         ApikeyCheckResponse data = apiKeyManagementService.checkApikeyStatus(keyId);
         ResponseData<ApikeyCheckResponse> response = ResponseData.<ApikeyCheckResponse>builder()

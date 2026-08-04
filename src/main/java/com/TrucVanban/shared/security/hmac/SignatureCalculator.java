@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -53,7 +52,7 @@ public class SignatureCalculator {
             byte[] rawHmac = mac.doFinal(canonicalString.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(rawHmac);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to calculate HMAC signature", e);
+            throw new IllegalStateException("Tính toán chữ ký HMAC thất bại", e);
         }
     }
 
@@ -85,7 +84,7 @@ public class SignatureCalculator {
             byte[] hash = digest.digest(payload);
             return bytesToHex(hash);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to compute SHA-256 hash", e);
+            throw new IllegalStateException("Tính toán mã băm SHA-256 thất bại", e);
         }
     }
 

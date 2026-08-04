@@ -42,20 +42,20 @@ public class ApiKeyWarmupRunner implements ApplicationRunner {
             return;
         }
 
-        log.info("[ApiKeyWarmupRunner] Loading active API keys into Redis");
+        log.info("[ApiKeyWarmupRunner] Đang tải các API key đang hoạt động vào Redis...");
 
-        // Load active API keys
+        // Load active api key
         List<ApiKey> keys = apiKeyRepository.findAll().stream()
                 .filter(key -> key.getStatus() == ApiKeyStatus.ACTIVE)
                 .filter(key -> key.getExpiresAt() == null || OffsetDateTime.now().isBefore(key.getExpiresAt()))
                 .toList();
 
         if (keys.isEmpty()) {
-            log.info("[ApiKeyWarmupRunner] No active API keys found");
+            log.info("[ApiKeyWarmupRunner] Không tìm thấy API key nào đang hoạt động");
             return;
         }
 
-        // Batch load organizations to avoid N+1 queries
+        // load hàng loạt orgs
         List<Long> agencyIds = keys.stream()
                 .map(ApiKey::getAgencyId)
                 .distinct()
@@ -69,12 +69,10 @@ public class ApiKeyWarmupRunner implements ApplicationRunner {
                 for (ApiKey apiKey : keys) {
                     Organization organization = organizationMap.get(apiKey.getAgencyId());
                     
-                    // Skip if organization not found or not active
                     if (organization == null || organization.getStatus() != OrganizationStatus.ACTIVE) {
-                        log.warn("[ApiKeyWarmupRunner] Skipping key {} - organization inactive or not found", apiKey.getKeyId());
+                        log.warn("[ApiKeyWarmupRunner] Bỏ qua key {} - cơ quan không hoạt động hoặc không tìm thấy", apiKey.getKeyId());
                         continue;
                     }
-
                     String cacheKey = API_KEY_CACHE_PREFIX + apiKey.getKeyId();
                     String value = JsonUtils.toJson(new ApiKeyCacheValue(
                             apiKey.getAgencyId(),
@@ -85,13 +83,11 @@ public class ApiKeyWarmupRunner implements ApplicationRunner {
                             organization.getStatus().name(),
                             apiKey.getExpiresAt()
                     ));
-                    
                     connection.stringCommands().setEx(
                             cacheKey.getBytes(StandardCharsets.UTF_8),
                             hmacProperties.getCacheTtl().getSeconds(),
                             value.getBytes(StandardCharsets.UTF_8)
-                    );
-                    
+                    );                   
                     connection.setCommands().sAdd(
                             (AGENCY_KEY_SET_PREFIX + apiKey.getAgencyId()).getBytes(StandardCharsets.UTF_8),
                             apiKey.getKeyId().getBytes(StandardCharsets.UTF_8)
@@ -101,9 +97,9 @@ public class ApiKeyWarmupRunner implements ApplicationRunner {
             };
 
             redisTemplate.executePipelined(callback);
-            log.info("[ApiKeyWarmupRunner] Warmup complete - loaded {} keys", keys.size());
+            log.info("[ApiKeyWarmupRunner] Hoàn tất warmup apikey redis cache - tổng có {} keys", keys.size());
         } catch (DataAccessException e) {
-            log.warn("[ApiKeyWarmupRunner] Redis unavailable during warmup: {}", e.getMessage());
+            log.warn("[ApiKeyWarmupRunner] Redis không khả dụng trong quá trình warmup: {}", e.getMessage());
         }
     }
 }

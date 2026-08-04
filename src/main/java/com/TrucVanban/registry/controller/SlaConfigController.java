@@ -4,6 +4,8 @@ import com.TrucVanban.registry.dto.request.UpdateSlaConfigRequest;
 import com.TrucVanban.registry.dto.response.UpdateSlaConfigResponse;
 import com.TrucVanban.registry.service.RegistryService;
 import com.TrucVanban.shared.ResponseData;
+
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ public class SlaConfigController {
     private final RegistryService registryService;
 
     @PutMapping("/{documentPriority}")
+    @Operation(summary = "Cập nhật SLA")
     public ResponseEntity<ResponseData<UpdateSlaConfigResponse>> updateSlaConfig(
             @PathVariable Integer documentPriority,
             @Valid @RequestBody UpdateSlaConfigRequest request) {

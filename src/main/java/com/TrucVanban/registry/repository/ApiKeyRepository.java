@@ -11,6 +11,6 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
     Optional<ApiKey> findByKeyIdAndStatus(String keyId, ApiKeyStatus status);
     List<ApiKey> findByStatus(ApiKeyStatus status);
 
-    //check
+    //check status apikey(chi de test xem co active k)
     Optional<ApiKey> findByKeyId(String keyId);
 }

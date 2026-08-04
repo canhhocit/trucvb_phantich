@@ -9,21 +9,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-/**
- * Interceptor để kiểm tra authorization: agency code trong path phải khớp với agency đã xác thực.
- * 
- * Chỉ áp dụng cho các endpoint được đánh dấu bằng @RequireAgencyMatch.
- * 
- * Flow:
- * 1. HmacAuthenticationFilter đã verify API key và set verified_org_code vào request attribute
- * 2. Interceptor này kiểm tra path variable khớp với verified_org_code
- * 3. Nếu không khớp → 403 Forbidden
- */
 @Slf4j
 @Component
 public class AgencyAuthorizationInterceptor implements HandlerInterceptor {
@@ -35,15 +24,14 @@ public class AgencyAuthorizationInterceptor implements HandlerInterceptor {
         }
 
         RequireAgencyMatch annotation = handlerMethod.getMethodAnnotation(RequireAgencyMatch.class);
+        // k co annotation => skip check
         if (annotation == null) {
-            return true; // Không có annotation → skip check
+            return true; 
         }
 
         String verifiedOrgCode = (String) request.getAttribute("verified_org_code");
-        if (verifiedOrgCode == null) {
-            // Không có verified_org_code → có thể do endpoint không qua HMAC filter
-            // Hoặc là bug trong filter chain
-            log.error("[AgencyAuthorizationInterceptor] Missing verified_org_code attribute - authentication may have been bypassed");
+        if (verifiedOrgCode == null) {// k có verified_org_code => có thể endpoint không qua HMAC filter
+            log.error("[AgencyAuthorizationInterceptor] Thiếu thuộc tính verified_org_code - xác thực có thể đã bị bỏ qua");
             writeErrorResponse(response, HttpStatus.UNAUTHORIZED, "Yêu cầu xác thực không hợp lệ");
             return false;
         }
@@ -52,7 +40,7 @@ public class AgencyAuthorizationInterceptor implements HandlerInterceptor {
         Map<String, String> pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
         
         if (pathVariables == null || pathVariables.isEmpty()) {
-            log.error("[AgencyAuthorizationInterceptor] No path variables found for @RequireAgencyMatch check");
+            log.error("[AgencyAuthorizationInterceptor] Không tìm thấy path variables nào cho kiểm tra @RequireAgencyMatch");
             writeErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi cấu hình hệ thống");
             return false;
         }
@@ -61,20 +49,20 @@ public class AgencyAuthorizationInterceptor implements HandlerInterceptor {
         String pathAgencyCode = pathVariables.get(pathVariableName);
 
         if (pathAgencyCode == null) {
-            log.error("[AgencyAuthorizationInterceptor] Path variable '{}' not found in request URI", pathVariableName);
+            log.error("[AgencyAuthorizationInterceptor] Không tìm thấy path variable '{}' trong request URI", pathVariableName);
             writeErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, "Lỗi cấu hình hệ thống");
             return false;
         }
 
         if (!verifiedOrgCode.equals(pathAgencyCode)) {
-            log.warn("[AgencyAuthorizationInterceptor] Authorization failed: verified={} but path={}", 
+            log.warn("[AgencyAuthorizationInterceptor] Phân quyền thất bại: đã xác thực={} nhưng path={}", 
                     verifiedOrgCode, pathAgencyCode);
             writeErrorResponse(response, HttpStatus.FORBIDDEN, 
                     "Bạn không có quyền truy cập tài nguyên của tổ chức này");
             return false;
         }
 
-        log.debug("[AgencyAuthorizationInterceptor] Authorization passed for agency: {}", verifiedOrgCode);
+        log.debug("[AgencyAuthorizationInterceptor] Phân quyền thành công cho cơ quan: {}", verifiedOrgCode);
         return true;
     }
 

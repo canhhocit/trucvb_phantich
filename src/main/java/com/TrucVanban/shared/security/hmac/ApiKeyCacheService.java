@@ -41,7 +41,7 @@ public class ApiKeyCacheService {
                 return JsonUtils.fromJson(json, ApiKeyCacheValue.class);
             }
         } catch (DataAccessException e) {
-            log.warn("[ApiKeyCacheService] Redis unavailable during apikey lookup: {}", e.getMessage());
+            log.warn("[ApiKeyCacheService] redis lỗi khi kiểm tra API key: {}", e.getMessage());
         }
 
         return loadApiKeyFromDatabase(keyId);
@@ -56,7 +56,7 @@ public class ApiKeyCacheService {
             }
             ApiKey apiKey = apiKeyOptional.get();
             if (apiKey.getExpiresAt() != null && OffsetDateTime.now().isAfter(apiKey.getExpiresAt())) {
-                log.warn("[ApiKeyCacheService] API key expired in DB: {}", keyId);
+                log.warn("[ApiKeyCacheService] API key đã hết hạn trong DB: {}", keyId);
                 negativeCacheMiss(keyId);
                 return null;
             }
@@ -79,7 +79,7 @@ public class ApiKeyCacheService {
             cacheApiKey(cacheValue);
             return cacheValue;
         } catch (DataAccessException e) {
-            log.warn("[ApiKeyCacheService] Redis unavailable while refreshing API key cache: {}", e.getMessage());
+            log.warn("[ApiKeyCacheService] redis lôix khi làm mới cache API key: {}", e.getMessage());
             return findApiKeyFromDb(keyId);
         }
     }
@@ -90,7 +90,7 @@ public class ApiKeyCacheService {
             redisTemplate.opsForValue().set(cacheKey, JsonUtils.toJson(value), hmacProperties.getCacheTtl());
             redisTemplate.opsForSet().add(AGENCY_KEY_SET_PREFIX + value.agencyId(), value.keyId());
         } catch (DataAccessException e) {
-            log.warn("[ApiKeyCacheService] Cannot write api key cache or agency set: {}", e.getMessage());
+            log.warn("[ApiKeyCacheService] Không thể ghi cache API key hoặc tập hợp cơ quan: {}", e.getMessage());
         }
     }
 
@@ -98,7 +98,7 @@ public class ApiKeyCacheService {
         try {
             redisTemplate.opsForValue().set(API_KEY_MISS_PREFIX + keyId, "1", hmacProperties.getNegativeCacheTtl());
         } catch (DataAccessException e) {
-            log.warn("[ApiKeyCacheService] Cannot write negative cache for api key miss: {}", e.getMessage());
+            log.warn("[ApiKeyCacheService] Không thể ghi negative cache cho trường hợp API key: {}", e.getMessage());
         }
     }
 
@@ -118,17 +118,14 @@ public class ApiKeyCacheService {
                 .orElse(null);
     }
 
-    /**
-     * Evict tất cả API key cache của một agency.
-     * Được gọi khi agency thay đổi trạng thái (suspend, activate, etc).
-     */
+    // xóa all API key cache 
     public void evictAgencyCache(Long agencyId) {
         try {
             String agencyKeySetKey = AGENCY_KEY_SET_PREFIX + agencyId;
             var keyIds = redisTemplate.opsForSet().members(agencyKeySetKey);
             
             if (keyIds == null || keyIds.isEmpty()) {
-                log.debug("[ApiKeyCacheService] No cached keys found for agency {}", agencyId);
+                log.debug("[ApiKeyCacheService] Không tìm thấy API key nào được cache cho cơ quan {}", agencyId);
                 return;
             }
 
@@ -139,9 +136,9 @@ public class ApiKeyCacheService {
             
             redisTemplate.delete(agencyKeySetKey);
             
-            log.info("[ApiKeyCacheService] Evicted {} API key cache entries for agency {}", keyIds.size(), agencyId);
+            log.info("[ApiKeyCacheService] Đã xóa {} cache API key cho cơ quan {}", keyIds.size(), agencyId);
         } catch (DataAccessException e) {
-            log.warn("[ApiKeyCacheService] Failed to evict cache for agency {}: {}", agencyId, e.getMessage());
+            log.warn("[ApiKeyCacheService] xóa cache cho cơ quan {} thất bại: {}", agencyId, e.getMessage());
         }
     }
 }

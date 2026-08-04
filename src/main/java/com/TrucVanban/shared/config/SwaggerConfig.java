@@ -13,22 +13,30 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
-        final String securitySchemeName = "bearerAuth";
+        final String systemCodeScheme = "X-System-Code";
+        final String apiKeyScheme = "X-API-Key";
 
         return new OpenAPI()
                 .info(new Info()
-                        .title("Truc Van Ban QG API")
-                        .description("Tài liệu API cho hệ thống Truc Van Ban Quoc Gia")
+                        .title("Trục Liên Thông Văn Bản API")
+                        .description("Tài liệu API tích hợp Trục Liên Thông Văn Bản Quốc Gia")
                         .version("v1.0"))
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
+                .addSecurityItem(new SecurityRequirement()
+                        .addList(systemCodeScheme)
+                        .addList(apiKeyScheme))
                 .components(new Components()
-                        .addSecuritySchemes(securitySchemeName,
+                        .addSecuritySchemes(systemCodeScheme,
                                 new SecurityScheme()
-                                        .name(securitySchemeName)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
-                        )
+                                        .name("X-System-Code")
+                                        .type(SecurityScheme.Type.APIKEY)
+                                        .in(SecurityScheme.In.HEADER)
+                                        .description("Nhập Mã hệ thống (ví dụ: SIMULATOR_CLIENT)"))
+                        .addSecuritySchemes(apiKeyScheme,
+                                new SecurityScheme()
+                                        .name("X-API-Key")
+                                        .type(SecurityScheme.Type.APIKEY)
+                                        .in(SecurityScheme.In.HEADER)
+                                        .description("Nhập Inbound API Key tương ứng trong db (vd : sim_inbound_ak_98765432101234567890)"))
                 );
     }
 }

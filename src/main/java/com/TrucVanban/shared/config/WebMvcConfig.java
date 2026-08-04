@@ -6,9 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Cấu hình Web MVC - đăng ký các interceptor.
- */
+//đăng ký các interceptor
 @Configuration
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -17,9 +15,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // Đăng ký interceptor kiểm tra agency authorization
-        // Interceptor này chỉ hoạt động khi endpoint có @RequireAgencyMatch
+        // chỉ hđ khi endpoint có @RequireAgencyMatch
         registry.addInterceptor(agencyAuthorizationInterceptor)
-                .addPathPatterns("/**"); // Apply to all paths, but only activate on @RequireAgencyMatch
+                .addPathPatterns("/**");
     }
 }

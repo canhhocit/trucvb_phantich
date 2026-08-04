@@ -54,9 +54,9 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
             String apiKey = request.getHeader(hmacProperties.getHeader().getApiKey());
             String path = request.getServletPath();
             
-            log.warn("[HmacAuthenticationFilter] Authentication failed for path={} reason={}", path, exception.getMessage());
+            log.warn("[HmacAuthenticationFilter] Xác thực thất bại cho đường dẫn={} lý do={}", path, exception.getMessage());
             
-            // Ghi audit log cho authentication failure
+            //audit log cho authen failure
             auditLogService.log(
                     "HMAC_AUTH_FAILED",
                     "API_KEY",
@@ -82,26 +82,25 @@ public class HmacAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String buildErrorMessage(HmacAuthenticationException exception) {
-        return switch (exception) {
-            case HmacAuthenticationException.MissingAuthHeaderException _ ->
-                    "Thiếu header xác thực. Yêu cầu: X-Api-Key, X-Timestamp, X-Nonce, X-Signature";
-            case HmacAuthenticationException.TimestampSkewException _ ->
-                    "Timestamp lệch quá giới hạn cho phép. Vui lòng đồng bộ đồng hồ hệ thống";
-            case HmacAuthenticationException.ApiKeyInvalidException _ ->
-                    "API Key không hợp lệ hoặc đã bị thu hồi";
-            case HmacAuthenticationException.ApiKeyExpiredException _ ->
-                    "API Key đã hết hạn. Vui lòng tạo key mới";
-            case HmacAuthenticationException.AgencyInactiveException _ ->
-                    "Tổ chức đã bị tạm ngưng hoặc không còn hoạt động";
-            case HmacAuthenticationException.SignatureInvalidException _ ->
-                    "Chữ ký không hợp lệ. Vui lòng kiểm tra secret key và canonical string";
-            case HmacAuthenticationException.ReplayDetectedException _ ->
-                    "Phát hiện replay attack. Nonce đã được sử dụng";
-            case HmacAuthenticationException.AuthStoreUnavailableException _ ->
-                    "Hệ thống xác thực tạm thời không khả dụng. Vui lòng thử lại";
-            default ->
-                    "Xác thực thất bại. Vui lòng kiểm tra thông tin xác thực";
-        };
+        if (exception instanceof HmacAuthenticationException.MissingAuthHeaderException) {
+            return "Thiếu header xác thực. Yêu cầu: X-Api-Key, X-Timestamp, X-Nonce, X-Signature";
+        } else if (exception instanceof HmacAuthenticationException.TimestampSkewException) {
+            return "Timestamp lệch quá giới hạn cho phép. Vui lòng đồng bộ đồng hồ hệ thống";
+        } else if (exception instanceof HmacAuthenticationException.ApiKeyInvalidException) {
+            return "API Key không hợp lệ hoặc đã bị thu hồi";
+        } else if (exception instanceof HmacAuthenticationException.ApiKeyExpiredException) {
+            return "API Key đã hết hạn. Vui lòng tạo key mới";
+        } else if (exception instanceof HmacAuthenticationException.AgencyInactiveException) {
+            return "Tổ chức đã bị tạm ngưng hoặc không còn hoạt động";
+        } else if (exception instanceof HmacAuthenticationException.SignatureInvalidException) {
+            return "Chữ ký không hợp lệ. Vui lòng kiểm tra secret key và canonical string";
+        } else if (exception instanceof HmacAuthenticationException.ReplayDetectedException) {
+            return "Phát hiện replay attack. Nonce đã được sử dụng";
+        } else if (exception instanceof HmacAuthenticationException.AuthStoreUnavailableException) {
+            return "Hệ thống xác thực tạm thời không khả dụng. Vui lòng thử lại";
+        } else {
+            return "Xác thực thất bại. Vui lòng kiểm tra thông tin xác thực";
+        }
     }
 
     private void writeErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {

@@ -10,9 +10,7 @@ public interface RegistryService {
 
     RegisterOrganizationResponse registerOrganization(RegisterOrganizationRequest request);
 
-    SuspendOrganizationResponse suspendOrganization(String code, SuspendOrganizationRequest request);
-
-    ApproveOrganizationResponse approveOrganization(String code, ApproveOrganizationRequest request);
+    UpdateOrganizationStatusResponse updateOrganizationStatus(String code, UpdateOrganizationStatusRequest request);
 
     UpdateEndpointResponse updateEndpoint(String code, UpdateEndpointRequest request);
 

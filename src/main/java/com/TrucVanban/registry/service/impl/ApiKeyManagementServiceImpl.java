@@ -66,7 +66,7 @@ public class ApiKeyManagementServiceImpl implements ApiKeyManagementService {
 
         apiKey = apiKeyRepository.save(apiKey);
 
-        log.info("[ApiKeyManagementService] Tạo API key mới: keyId={}, agencyCode={}", keyId, agencyCode);
+        log.info("[ApiKeyManagementService] Tạo API key mới thành công: keyId={}, agencyCode={}", keyId, agencyCode);
 
         return CreateApiKeyResponse.builder()
                 .keyId(keyId)
@@ -90,14 +90,28 @@ public class ApiKeyManagementServiceImpl implements ApiKeyManagementService {
         apiKey.setRevokedAt(OffsetDateTime.now());
         apiKeyRepository.save(apiKey);
 
-        // Xoá khỏi Redis ngay lập tức sau khi transaction commit
+        // xóa khoi redis sau trans
         evictFromRedis(keyId);
 
-        log.info("[ApiKeyManagementService] Thu hồi API key: keyId={}", keyId);
+        log.info("[ApiKeyManagementService] Đã thu hồi API key: keyId={}", keyId);
     }
 
-    // ───────────────────────── helpers ─────────────────────────
+    // check status api
+    // hàm để check lỗi, sau co the xóa 
+    @Override
+    public ApikeyCheckResponse checkApikeyStatus(String keyId) {
+        ApiKey apiKey = apiKeyRepository.findByKeyId(keyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy API key với keyId: " + keyId));
 
+        return ApikeyCheckResponse.builder()
+                .keyId(apiKey.getKeyId())
+                .status(apiKey.getStatus().name())
+                .expiresAt(apiKey.getExpiresAt())
+                .createdAt(apiKey.getCreatedAt())
+                .build();
+    }
+
+    // helper func
     private String generateKeyId() {
         byte[] bytes = new byte[12];
         new SecureRandom().nextBytes(bytes);
@@ -115,23 +129,7 @@ public class ApiKeyManagementServiceImpl implements ApiKeyManagementService {
             redisTemplate.delete(REDIS_API_KEY_PREFIX + keyId);
             redisTemplate.delete(REDIS_API_KEY_MISS_PREFIX + keyId);
         } catch (DataAccessException e) {
-            // Redis lỗi không làm revoke thất bại — key đã bị REVOKED trong DB.
-            // Lần request tiếp theo sẽ đọc lại DB và nhận null.
             log.warn("[ApiKeyManagementService] Không thể xoá cache Redis cho keyId={}: {}", keyId, e.getMessage());
         }
-    }
-
-    // check
-    @Override
-    public ApikeyCheckResponse checkApikeyStatus(String keyId) {
-        ApiKey apiKey = apiKeyRepository.findByKeyId(keyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy API key với keyId: " + keyId));
-
-        return ApikeyCheckResponse.builder()
-                .keyId(apiKey.getKeyId())
-                .status(apiKey.getStatus().name())
-                .expiresAt(apiKey.getExpiresAt())
-                .createdAt(apiKey.getCreatedAt())
-                .build();
     }
 }

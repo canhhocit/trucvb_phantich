@@ -30,7 +30,7 @@ public class AesGcmEncryptionService {
     public void init() {
         String masterKey = hmacProperties.getMasterKey();
         if (masterKey == null || masterKey.isBlank()) {
-            throw new IllegalStateException("security.hmac.master-key must be configured to decrypt API key secrets");
+            throw new IllegalStateException("Cấu hình security.hmac.master-key bắt buộc phải được khai báo để giải mã API key secrets");
         }
         secretKey = deriveSecretKey(masterKey);
     }
@@ -51,7 +51,7 @@ public class AesGcmEncryptionService {
             buffer.put(ciphertext);
             return Base64.getEncoder().encodeToString(buffer.array());
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to encrypt API key secret", e);
+            throw new IllegalStateException("Mã hóa API key secret thất bại", e);
         }
     }
 
@@ -59,7 +59,7 @@ public class AesGcmEncryptionService {
         try {
             byte[] encoded = Base64.getDecoder().decode(encryptedValue);
             if (encoded.length < IV_LENGTH) {
-                throw new IllegalArgumentException("Encrypted API key value is invalid");
+                throw new IllegalArgumentException("Giá trị API key đã mã hóa không hợp lệ");
             }
 
             ByteBuffer buffer = ByteBuffer.wrap(encoded);
@@ -74,7 +74,7 @@ public class AesGcmEncryptionService {
             byte[] plaintextBytes = cipher.doFinal(ciphertext);
             return new String(plaintextBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to decrypt API key secret", e);
+            throw new IllegalStateException("Giải mã API key secret thất bại", e);
         }
     }
 
@@ -84,7 +84,7 @@ public class AesGcmEncryptionService {
             byte[] keyBytes = digest.digest(masterKey.getBytes(StandardCharsets.UTF_8));
             return new SecretKeySpec(keyBytes, "AES");
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to derive AES key from HMAC master key", e);
+            throw new IllegalStateException("Tạo khóa AES từ khóa chính HMAC thất bại", e);
         }
     }
 }

@@ -107,7 +107,7 @@ public class GlobalException {
     @ExceptionHandler(value = UnauthorizedException.class)
     public ResponseEntity<?> unauthorize(UnauthorizedException e) {
         ResponseData<Void> response = ResponseData.<Void>builder()
-                .message("Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.")
+                .message(e.getMessage())
                 .data(null)
                 .build();
         log.error("RESPONSE: {} - {}", response, e.getMessage());

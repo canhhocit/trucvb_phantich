@@ -23,21 +23,21 @@ public class AuditLogServiceImpl implements AuditLogService {
     public void log(String action, String actorType, String actorId,
                     String result, String detail,
                     Long transactionId, Long documentId) {
-        try {
-            AuditLog auditLog = AuditLog.builder()
-                    .action(action)
-                    .actorType(actorType)
-                    .actorId(actorId)
-                    .result(result)
-                    .detail(detail)
-                    .transactionId(transactionId)
-                    .documentId(documentId)
-                    .build();
-            auditLogRepository.save(auditLog);
-            log.debug("[AuditLog] Ghi nhật ký: action={}, actor={}, result={}", action, actorId, result);
-        } catch (Exception e) {
-            // Không throw exception - ghi audit log thất bại không được làm gián đoạn luồng chính
-            log.error("[AuditLog] Lỗi ghi nhật ký kiểm toán: {}", e.getMessage(), e);
-        }
+//            try {
+//                AuditLog auditLog = AuditLog.builder()
+//                        .action(action)
+//                        .actorType(actorType)
+//                        .actorId(actorId)
+//                        .result(result)
+//                        .detail(detail)
+//                        .transactionId(transactionId)
+//                        .documentId(documentId)
+//                        .build();
+//                auditLogRepository.save(auditLog);
+//                log.debug("[AuditLog] Ghi nhật ký: action={}, actor={}, result={}", action, actorId, result);
+//            } catch (Exception e) {
+//                // Không throw exception - ghi audit log thất bại không được làm gián đoạn luồng chính
+//                log.error("[AuditLog] Lỗi ghi nhật ký kiểm toán: {}", e.getMessage(), e);
+//            }
     }
 }

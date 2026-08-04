@@ -22,7 +22,7 @@ public class RedisNonceStore implements NonceStore {
         try {
             return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(redisKey, "1", ttl));
         } catch (DataAccessException exception) {
-            log.error("[RedisNonceStore] Redis unavailable while reserving nonce {}: {}", redisKey, exception.getMessage());
+            log.error("[RedisNonceStore] Redis không khả dụng khi đặt trước nonce {}: {}", redisKey, exception.getMessage());
             throw new HmacAuthenticationException.AuthStoreUnavailableException("Không thể kiểm tra nonce tại thời điểm này.");
         }
     }

@@ -8,10 +8,7 @@ import jakarta.servlet.http.HttpServletRequestWrapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-/**
- * Đọc toàn bộ body vào bộ nhớ một lần khi wrap, cho phép đọc lại nhiều lần.
- * Dùng cho POST /ack: filter đọc body để tính HMAC, sau đó Controller đọc lại để parse JSON.
- */
+
 public class CachedBodyRequestWrapper extends HttpServletRequestWrapper {
 
     private final byte[] cachedBody;
@@ -46,7 +43,7 @@ public class CachedBodyRequestWrapper extends HttpServletRequestWrapper {
 
             @Override
             public void setReadListener(ReadListener listener) {
-                // không cần thiết cho synchronous filter
+                // k cần thiết cho synchronous filter
             }
         };
     }
